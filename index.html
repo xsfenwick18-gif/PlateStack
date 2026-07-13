@@ -1117,6 +1117,52 @@
     color:var(--text-muted);
   }
   .today-log-item:last-child{border-bottom:none;}
+  .today-log-item{display:flex; justify-content:space-between; align-items:center;}
+  .today-log-item .log-item-text{flex:1;}
+  .delete-x{
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    font-size:15px;
+    cursor:pointer;
+    padding:4px 8px;
+    margin-left:6px;
+    border-radius:6px;
+    flex-shrink:0;
+  }
+  .delete-x:hover{color:var(--accent); background:rgba(37,99,235,0.08);}
+  .meal-row-actions{display:flex; gap:6px; align-items:center;}
+  .grams-prompt{
+    background:var(--surface);
+    border-radius:8px;
+    box-shadow:var(--shadow-inset);
+    padding:10px;
+    margin-top:8px;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .grams-prompt input{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:8px 10px;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:14px;
+    color:var(--text);
+  }
+  .grams-prompt button{
+    background:linear-gradient(180deg, #3b78f0, var(--accent));
+    border:none;
+    color:#fff;
+    font-weight:700;
+    padding:8px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
 </style>
 </head>
 <body>
@@ -1201,6 +1247,52 @@
 
   <div id="dietView" style="display:none">
     <div class="metrics-card">
+      <h3>My Meals</h3>
+      <div class="micro-section-title" style="margin-bottom:12px">Saved at a reference weight — tap Log, then tell it how many grams you're actually eating. It scales the macros for you.</div>
+      <div id="myMealsList"></div>
+      <div class="toggle-link" id="showAddMeal">+ Save a new meal</div>
+      <div class="log-food-form" id="addMealForm">
+        <div class="row"><input type="text" id="newMealName" placeholder="Meal name" style="width:100%"></div>
+        <div class="row">
+          <input type="number" id="newMealGrams" placeholder="reference grams">
+          <input type="number" id="newMealCals" placeholder="kcal">
+          <input type="number" id="newMealProtein" placeholder="protein g">
+        </div>
+        <div class="row">
+          <input type="number" id="newMealCarbs" placeholder="carbs g">
+          <input type="number" id="newMealFat" placeholder="fat g">
+        </div>
+        <div class="row">
+          <input type="number" id="newMealFiber" placeholder="fiber g (optional)">
+          <input type="number" id="newMealSodium" placeholder="sodium mg (optional)">
+        </div>
+        <button id="saveMealBtn">Save Meal</button>
+      </div>
+    </div>
+
+    <div class="metrics-card">
+      <h3>Quick Log</h3>
+      <div class="micro-section-title" style="margin-bottom:12px">For a one-off item you weighed but don't want to save as a regular.</div>
+      <div class="log-food-form active" style="margin-top:0">
+        <div class="row"><input type="text" id="qlName" placeholder="Food name" style="width:100%"></div>
+        <div class="row">
+          <input type="number" id="qlGrams" placeholder="grams eaten">
+          <input type="number" id="qlCals" placeholder="kcal">
+          <input type="number" id="qlProtein" placeholder="protein g">
+        </div>
+        <div class="row">
+          <input type="number" id="qlCarbs" placeholder="carbs g">
+          <input type="number" id="qlFat" placeholder="fat g">
+        </div>
+        <div class="row">
+          <input type="number" id="qlFiber" placeholder="fiber g (optional)">
+          <input type="number" id="qlSodium" placeholder="sodium mg (optional)">
+        </div>
+        <button id="qlLogBtn">Log Now</button>
+      </div>
+    </div>
+
+    <div class="metrics-card">
       <div class="score-header">
         <div>
           <h3 style="margin-bottom:2px">Today's Nutrition</h3>
@@ -1262,29 +1354,6 @@
       </div>
 
       <div id="todayLogList" style="margin-top:14px"></div>
-    </div>
-
-    <div class="metrics-card">
-      <h3>My Meals</h3>
-      <div id="myMealsList"></div>
-      <div class="toggle-link" id="showAddMeal">+ Save a new meal</div>
-      <div class="log-food-form" id="addMealForm">
-        <div class="row"><input type="text" id="newMealName" placeholder="Meal name" style="width:100%"></div>
-        <div class="row">
-          <input type="number" id="newMealGrams" placeholder="grams">
-          <input type="number" id="newMealCals" placeholder="kcal">
-          <input type="number" id="newMealProtein" placeholder="protein g">
-        </div>
-        <div class="row">
-          <input type="number" id="newMealCarbs" placeholder="carbs g">
-          <input type="number" id="newMealFat" placeholder="fat g">
-        </div>
-        <div class="row">
-          <input type="number" id="newMealFiber" placeholder="fiber g (optional)">
-          <input type="number" id="newMealSodium" placeholder="sodium mg (optional)">
-        </div>
-        <button id="saveMealBtn">Save Meal</button>
-      </div>
     </div>
   </div>
 </main>
@@ -1969,7 +2038,25 @@ async function loadTodaySummary(){
   entries.forEach((e, i) => {
     const row = document.createElement('div');
     row.className = 'today-log-item';
-    row.innerHTML = `<span>${e.foodName} (${e.grams}g)</span><span>${Math.round(e.calories)} kcal · ${Math.round(e.protein)}g protein</span>`;
+    const textSpan = document.createElement('span');
+    textSpan.className = 'log-item-text';
+    textSpan.innerHTML = `${e.foodName} (${e.grams}g) — <span style="color:var(--text)">${Math.round(e.calories)} kcal · ${Math.round(e.protein)}g protein</span>`;
+    const delBtn = document.createElement('button');
+    delBtn.className = 'delete-x';
+    delBtn.textContent = '✕';
+    delBtn.title = 'Remove this entry';
+    delBtn.addEventListener('click', async () => {
+      const proceed = await showConfirm("Remove entry?", `Delete "${e.foodName}" from today's log? This can't be undone.`);
+      if(!proceed) return;
+      await fetch(API_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify({ type:'deletefood', id: e.id })
+      });
+      flashToast("Entry removed");
+      loadTodaySummary();
+    });
+    row.appendChild(textSpan);
+    row.appendChild(delBtn);
     list.appendChild(row);
     if(i === entries.length - 1) highlightNewRow(row);
   });
@@ -1997,31 +2084,88 @@ async function loadMyMeals(){
   meals.forEach(m => {
     const row = document.createElement('div');
     row.className = 'meal-row';
-    row.innerHTML = `<div>
-        <div class="fname">${m.name}</div>
-        <div class="fmacro">${m.calories}kcal · ${m.protein}g protein per ${m.gramsBase}g</div>
+    row.style.flexDirection = 'column';
+    row.style.alignItems = 'stretch';
+    row.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
+        <div>
+          <div class="fname">${m.name}</div>
+          <div class="fmacro">${m.calories}kcal · ${m.protein}g protein per ${m.gramsBase}g</div>
+        </div>
+        <div class="meal-row-actions">
+          <button class="log-toggle-btn">Log</button>
+          <button class="delete-x">✕</button>
+        </div>
       </div>
-      <button>Log</button>`;
-    const logBtn = row.querySelector('button');
-    logBtn.addEventListener('click', async () => {
-      await withButtonFeedback(logBtn, async () => {
-        await fetch(API_URL, {
-          method:'POST', headers:{'Content-Type':'text/plain'},
-          body: JSON.stringify({
-            type:'food', date: todayDate(), meal:'',
-            foodName: m.name, grams: m.gramsBase,
-            calories: m.calories, protein: m.protein, carbs: m.carbs, fat: m.fat,
-            fiber: m.fiber || 0, sodium: m.sodium || 0,
-            source: 'My Meals'
-          })
-        });
-      }, { loadingText:'', successText:'Logged' });
-      flashToast(m.name + " logged");
-      loadTodaySummary();
+    `;
+
+    const logBtn = row.querySelector('.log-toggle-btn');
+    const delBtn = row.querySelector('.delete-x');
+
+    delBtn.addEventListener('click', async () => {
+      const proceed = await showConfirm("Delete meal?", `Remove "${m.name}" from My Meals? This won't affect anything already logged.`);
+      if(!proceed) return;
+      await fetch(API_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify({ type:'deletemeal', id: m.id })
+      });
+      flashToast("Meal deleted");
+      loadMyMeals();
     });
+
+    logBtn.addEventListener('click', () => {
+      const existing = row.querySelector('.grams-prompt');
+      if(existing){ existing.remove(); return; }
+
+      const prompt = document.createElement('div');
+      prompt.className = 'grams-prompt';
+      prompt.innerHTML = `
+        <input type="number" value="${m.gramsBase}" placeholder="grams eaten today">
+        <button>Confirm</button>
+      `;
+      const input = prompt.querySelector('input');
+      const confirmBtn = prompt.querySelector('button');
+      confirmBtn.addEventListener('click', async () => {
+        const gramsEaten = Number(input.value);
+        if(!gramsEaten || gramsEaten <= 0){ flashToast("Enter grams eaten", "error"); return; }
+
+        const ratio = gramsEaten / Number(m.gramsBase);
+        const scaled = {
+          calories: Math.round(m.calories * ratio),
+          protein: Math.round(m.protein * ratio),
+          carbs: Math.round(m.carbs * ratio),
+          fat: Math.round(m.fat * ratio),
+          fiber: Math.round((m.fiber||0) * ratio),
+          sodium: Math.round((m.sodium||0) * ratio)
+        };
+
+        await withButtonFeedback(confirmBtn, async () => {
+          await fetch(API_URL, {
+            method:'POST', headers:{'Content-Type':'text/plain'},
+            body: JSON.stringify({
+              type:'food', date: todayDate(), meal:'',
+              foodName: m.name, grams: gramsEaten,
+              calories: scaled.calories, protein: scaled.protein,
+              carbs: scaled.carbs, fat: scaled.fat,
+              fiber: scaled.fiber, sodium: scaled.sodium,
+              source: 'My Meals'
+            })
+          });
+        }, { loadingText:'', successText:'✓' });
+
+        flashToast(`${m.name} logged — ${gramsEaten}g, ${scaled.calories}kcal`);
+        prompt.remove();
+        loadTodaySummary();
+      });
+      row.appendChild(prompt);
+      input.focus();
+      input.select();
+    });
+
     list.appendChild(row);
   });
 }
+
 
 document.getElementById('showAddMeal').addEventListener('click', () => {
   document.getElementById('addMealForm').classList.toggle('active');
@@ -2055,6 +2199,39 @@ document.getElementById('saveMealBtn').addEventListener('click', async (e) => {
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('addMealForm').classList.remove('active');
   loadMyMeals();
+});
+
+document.getElementById('qlLogBtn').addEventListener('click', async (e) => {
+  const name = document.getElementById('qlName').value.trim();
+  const grams = document.getElementById('qlGrams').value;
+  const calories = document.getElementById('qlCals').value;
+  const protein = document.getElementById('qlProtein').value;
+  const carbs = document.getElementById('qlCarbs').value;
+  const fat = document.getElementById('qlFat').value;
+  const fiber = document.getElementById('qlFiber').value;
+  const sodium = document.getElementById('qlSodium').value;
+
+  if(!name || !grams || !calories){
+    flashToast("Name, grams, and calories are required", "error");
+    return;
+  }
+
+  const ok = await withButtonFeedback(e.currentTarget, async () => {
+    await fetch(API_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({
+        type:'food', date: todayDate(), meal:'',
+        foodName: name, grams, calories, protein, carbs, fat, fiber, sodium,
+        source: 'Quick Log'
+      })
+    });
+  }, { loadingText: 'Logging...', successText: 'Logged' });
+
+  if(!ok) return;
+  flashToast(`${name} logged`);
+  ['qlName','qlGrams','qlCals','qlProtein','qlCarbs','qlFat','qlFiber','qlSodium']
+    .forEach(id => document.getElementById(id).value = '');
+  loadTodaySummary();
 });
 
 function loadProgressView(){
