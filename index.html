@@ -946,6 +946,49 @@
   }
 
   /* Diet section */
+  .score-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .score-sub{
+    font-size:12px;
+    color:var(--text-muted);
+  }
+  .score-ring-wrap{
+    position:relative;
+    width:64px; height:64px;
+    flex-shrink:0;
+  }
+  .score-ring-wrap svg{transform:rotate(-90deg);}
+  .score-track{fill:none; stroke:var(--border); stroke-width:6;}
+  .score-progress{
+    fill:none; stroke:var(--accent); stroke-width:6;
+    stroke-linecap:round;
+    transition:stroke-dashoffset 0.6s ease, stroke 0.3s;
+  }
+  .score-ring-value{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:16px;
+  }
+  .micro-section{
+    margin-top:18px;
+    padding-top:14px;
+    border-top:1px solid var(--border);
+  }
+  .micro-section-title{
+    font-family:'Oswald',sans-serif;
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:10px;
+  }
+  .bar-fill.over-limit{background:linear-gradient(90deg, var(--accent-dim), var(--accent));}
   .summary-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -1158,7 +1201,21 @@
 
   <div id="dietView" style="display:none">
     <div class="metrics-card">
-      <h3>Today's Totals</h3>
+      <div class="score-header">
+        <div>
+          <h3 style="margin-bottom:2px">Today's Nutrition</h3>
+          <div class="score-sub" id="scoreSub">Log something to see your score</div>
+        </div>
+        <div class="score-ring-wrap">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle class="score-track" cx="32" cy="32" r="27"></circle>
+            <circle class="score-progress" id="scoreRingProgress" cx="32" cy="32" r="27"
+              stroke-dasharray="169.6" stroke-dashoffset="169.6"></circle>
+          </svg>
+          <div class="score-ring-value" id="scoreRingValue">–</div>
+        </div>
+      </div>
+
       <div class="summary-grid">
         <div class="summary-item">
           <div class="label">Calories</div>
@@ -1172,7 +1229,38 @@
           <div class="target">Target 140–160g</div>
           <div class="bar-track"><div class="bar-fill" id="barProtein" style="width:0%"></div></div>
         </div>
+        <div class="summary-item">
+          <div class="label">Carbs</div>
+          <div class="value" id="sumCarbs">0g</div>
+          <div class="target">Target 380–430g</div>
+          <div class="bar-track"><div class="bar-fill" id="barCarbs" style="width:0%"></div></div>
+        </div>
+        <div class="summary-item">
+          <div class="label">Fat</div>
+          <div class="value" id="sumFat">0g</div>
+          <div class="target">Target 80–95g</div>
+          <div class="bar-track"><div class="bar-fill" id="barFat" style="width:0%"></div></div>
+        </div>
       </div>
+
+      <div class="micro-section">
+        <div class="micro-section-title">Micros</div>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="label">Fiber</div>
+            <div class="value" id="sumFiber">0g</div>
+            <div class="target">Target 30–38g</div>
+            <div class="bar-track"><div class="bar-fill" id="barFiber" style="width:0%"></div></div>
+          </div>
+          <div class="summary-item">
+            <div class="label">Sodium</div>
+            <div class="value" id="sumSodium">0mg</div>
+            <div class="target" id="sodiumTarget">Keep under 2300mg</div>
+            <div class="bar-track"><div class="bar-fill" id="barSodium" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
       <div id="todayLogList" style="margin-top:14px"></div>
     </div>
 
@@ -1190,6 +1278,10 @@
         <div class="row">
           <input type="number" id="newMealCarbs" placeholder="carbs g">
           <input type="number" id="newMealFat" placeholder="fat g">
+        </div>
+        <div class="row">
+          <input type="number" id="newMealFiber" placeholder="fiber g (optional)">
+          <input type="number" id="newMealSodium" placeholder="sodium mg (optional)">
         </div>
         <button id="saveMealBtn">Save Meal</button>
       </div>
@@ -1752,8 +1844,18 @@ tabProgress.addEventListener('click', () => {
 
 const tabDiet = document.getElementById('tabDiet');
 const dietView = document.getElementById('dietView');
-const CAL_TARGET_MID = 3100;
-const PROTEIN_TARGET_MID = 150;
+
+// Targets — derived from the established 3000-3200 kcal / 140-160g protein
+// lean bulk brief. Fat set to ~25% of calories, carbs fill the remainder.
+// Fiber/sodium use standard general dietary guidelines.
+const TARGETS = {
+  calories: { min: 3000, max: 3200 },
+  protein:  { min: 140,  max: 160 },
+  carbs:    { min: 380,  max: 430 },
+  fat:      { min: 80,   max: 95 },
+  fiber:    { min: 30,   max: 38 },
+  sodium:   { max: 2300 } // upper limit, not a "hit this" target
+};
 
 tabDiet.addEventListener('click', () => {
   tabDiet.classList.add('active');
@@ -1770,22 +1872,97 @@ function loadDietView(){
   loadMyMeals();
 }
 
+// Scores 0-100 per nutrient: full marks inside the target range, tapering
+// off the further outside it you land. Sodium scores inversely (lower = better).
+function scoreAgainstRange(value, target){
+  if(target.max !== undefined && target.min === undefined){
+    // ceiling-only target (sodium): 100 at 0, drops linearly to 0 at 2x limit
+    if(value <= target.max) return 100;
+    const over = value - target.max;
+    return Math.max(0, Math.round(100 - (over / target.max) * 100));
+  }
+  if(value >= target.min && value <= target.max) return 100;
+  const mid = (target.min + target.max) / 2;
+  const halfRange = (target.max - target.min) / 2 || 1;
+  const dist = value < target.min ? target.min - value : value - target.max;
+  return Math.max(0, Math.round(100 - (dist / halfRange) * 60));
+}
+
+function updateScoreRing(score){
+  const CIRC = 169.6;
+  const ring = document.getElementById('scoreRingProgress');
+  const valueEl = document.getElementById('scoreRingValue');
+  const subEl = document.getElementById('scoreSub');
+  ring.style.strokeDashoffset = CIRC - (CIRC * score / 100);
+  valueEl.textContent = score;
+
+  let color = 'var(--accent)', verdict = 'On track — keep it up.';
+  if(score >= 85){ color = 'var(--success)'; verdict = 'Excellent — right on target.'; }
+  else if(score < 50){ color = '#D97706'; verdict = 'Off target — check what\'s missing below.'; }
+  ring.style.stroke = color;
+  subEl.textContent = verdict;
+}
+
 // ==== Daily summary ====
 async function loadTodaySummary(){
-  const res = await fetch(`${API_URL}?action=foodlog&date=${todayDate()}`);
-  const entries = await res.json();
+  let entries;
+  try{
+    const res = await fetch(`${API_URL}?action=foodlog&date=${todayDate()}`);
+    entries = await res.json();
+  } catch(err){
+    document.getElementById('scoreSub').textContent = "Couldn't load today's log — check your connection";
+    return;
+  }
 
-  let cals=0, protein=0;
-  entries.forEach(e => { cals += Number(e.calories)||0; protein += Number(e.protein)||0; });
+  let cals=0, protein=0, carbs=0, fat=0, fiber=0, sodium=0;
+  entries.forEach(e => {
+    cals += Number(e.calories)||0;
+    protein += Number(e.protein)||0;
+    carbs += Number(e.carbs)||0;
+    fat += Number(e.fat)||0;
+    fiber += Number(e.fiber)||0;
+    sodium += Number(e.sodium)||0;
+  });
 
-  const sumCalsEl = document.getElementById('sumCals');
-  const sumProteinEl = document.getElementById('sumProtein');
-  sumCalsEl.textContent = Math.round(cals);
-  sumProteinEl.textContent = Math.round(protein)+'g';
-  popStat(sumCalsEl);
-  popStat(sumProteinEl);
-  document.getElementById('barCals').style.width = Math.min(100, (cals/CAL_TARGET_MID)*100)+'%';
-  document.getElementById('barProtein').style.width = Math.min(100, (protein/PROTEIN_TARGET_MID)*100)+'%';
+  const setStat = (id, barId, value, unit, target, isCeiling) => {
+    const valEl = document.getElementById(id);
+    valEl.textContent = Math.round(value) + unit;
+    popStat(valEl);
+    const pct = isCeiling
+      ? Math.min(100, (value / target.max) * 100)
+      : Math.min(100, (value / target.max) * 100);
+    const bar = document.getElementById(barId);
+    bar.style.width = pct + '%';
+    if(isCeiling && value > target.max){
+      bar.classList.add('over-limit');
+    } else {
+      bar.classList.remove('over-limit');
+    }
+  };
+
+  setStat('sumCals', 'barCals', cals, '', TARGETS.calories, false);
+  setStat('sumProtein', 'barProtein', protein, 'g', TARGETS.protein, false);
+  setStat('sumCarbs', 'barCarbs', carbs, 'g', TARGETS.carbs, false);
+  setStat('sumFat', 'barFat', fat, 'g', TARGETS.fat, false);
+  setStat('sumFiber', 'barFiber', fiber, 'g', TARGETS.fiber, false);
+  setStat('sumSodium', 'barSodium', sodium, 'mg', TARGETS.sodium, true);
+
+  document.getElementById('sodiumTarget').textContent =
+    sodium > TARGETS.sodium.max ? `Over the 2300mg guideline` : `Keep under 2300mg`;
+
+  // Nutrition score: weighted average, protein counts double since it's the priority
+  const scores = {
+    calories: scoreAgainstRange(cals, TARGETS.calories),
+    protein: scoreAgainstRange(protein, TARGETS.protein),
+    carbs: scoreAgainstRange(carbs, TARGETS.carbs),
+    fat: scoreAgainstRange(fat, TARGETS.fat),
+    fiber: scoreAgainstRange(fiber, TARGETS.fiber),
+    sodium: scoreAgainstRange(sodium, TARGETS.sodium)
+  };
+  const weighted = (scores.calories + scores.protein*2 + scores.carbs + scores.fat + scores.fiber + scores.sodium) / 7;
+  const finalScore = entries.length === 0 ? 0 : Math.round(weighted);
+  updateScoreRing(finalScore);
+  if(entries.length === 0) document.getElementById('scoreSub').textContent = 'Log something to see your score';
 
   const list = document.getElementById('todayLogList');
   list.innerHTML = '';
@@ -1801,9 +1978,15 @@ async function loadTodaySummary(){
 // ==== Food search (Open Food Facts — free, no key) ====
 // ==== My Meals ====
 async function loadMyMeals(){
-  const res = await fetch(`${API_URL}?action=custommeals`);
-  const meals = await res.json();
   const list = document.getElementById('myMealsList');
+  let meals;
+  try{
+    const res = await fetch(`${API_URL}?action=custommeals`);
+    meals = await res.json();
+  } catch(err){
+    list.innerHTML = '<div class="empty-chart">Couldn\'t load meals — check your connection</div>';
+    return;
+  }
   list.innerHTML = '';
 
   if(meals.length === 0){
@@ -1828,6 +2011,7 @@ async function loadMyMeals(){
             type:'food', date: todayDate(), meal:'',
             foodName: m.name, grams: m.gramsBase,
             calories: m.calories, protein: m.protein, carbs: m.carbs, fat: m.fat,
+            fiber: m.fiber || 0, sodium: m.sodium || 0,
             source: 'My Meals'
           })
         });
@@ -1850,6 +2034,8 @@ document.getElementById('saveMealBtn').addEventListener('click', async (e) => {
   const protein = document.getElementById('newMealProtein').value;
   const carbs = document.getElementById('newMealCarbs').value;
   const fat = document.getElementById('newMealFat').value;
+  const fiber = document.getElementById('newMealFiber').value;
+  const sodium = document.getElementById('newMealSodium').value;
 
   if(!name || !gramsBase || !calories){
     flashToast("Name, grams, and calories are required", "error");
@@ -1859,13 +2045,13 @@ document.getElementById('saveMealBtn').addEventListener('click', async (e) => {
   const ok = await withButtonFeedback(e.currentTarget, async () => {
     await fetch(API_URL, {
       method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({ type:'custommeal', name, gramsBase, calories, protein, carbs, fat })
+      body: JSON.stringify({ type:'custommeal', name, gramsBase, calories, protein, carbs, fat, fiber, sodium })
     });
   }, { loadingText: 'Saving...', successText: 'Saved' });
 
   if(!ok) return;
   flashToast("Meal saved");
-  ['newMealName','newMealGrams','newMealCals','newMealProtein','newMealCarbs','newMealFat']
+  ['newMealName','newMealGrams','newMealCals','newMealProtein','newMealCarbs','newMealFat','newMealFiber','newMealSodium']
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('addMealForm').classList.remove('active');
   loadMyMeals();
