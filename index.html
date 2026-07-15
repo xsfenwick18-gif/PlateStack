@@ -246,6 +246,22 @@
     border-radius:6px;
   }
   .sets-list{padding:0 18px 18px;}
+  .breath-cue{
+    margin:0 18px 12px;
+    padding:9px 12px;
+    background:rgba(37,99,235,0.06);
+    border:1px solid rgba(37,99,235,0.15);
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-size:11.5px;
+    line-height:1.4;
+    color:var(--accent-dim);
+    display:flex;
+    align-items:flex-start;
+    gap:7px;
+  }
+  .breath-cue strong{font-weight:700; color:var(--accent);}
+  .breath-icon{flex-shrink:0; font-size:13px; line-height:1.4;}
   .last-time-row{
     display:flex;
     align-items:center;
@@ -1559,6 +1575,17 @@ async function renderExercises(exercises){
     head.innerHTML = `<div class="exercise-name">${ex.exercise}</div>
       <div class="exercise-target">${ex.targetSets} × ${ex.repLow}-${ex.repHigh}</div>`;
     card.appendChild(head);
+
+    // Breathing/bracing cue — compound lifts get the full brace sequence,
+    // isolation work just needs the exhale-on-the-hard-part rule.
+    const breathRow = document.createElement('div');
+    breathRow.className = 'breath-cue';
+    if(BIG_LIFTS.includes(ex.exercise)){
+      breathRow.innerHTML = `<span class="breath-icon">🫁</span> <strong>INASEM</strong> → <strong>OPHOU</strong> → <strong>BRACE</strong> maag → <strong>BEWEEG</strong> → <strong>UITASEM</strong> op swaar deel`;
+    } else {
+      breathRow.innerHTML = `<span class="breath-icon">🫁</span> Uitasem op die harde deel — geen bracing nodig nie`;
+    }
+    card.appendChild(breathRow);
 
     // Last-time reference row — placeholder while loading, filled in once fetched
     const lastTimeRow = document.createElement('div');
