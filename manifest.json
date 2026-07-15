@@ -1,6 +1,6 @@
 {
-  "name": "PlateStack",
-  "short_name": "PlateStack",
+  "name": "Gym Fanatic",
+  "short_name": "Gym Fanatic",
   "description": "Progressive overload, visualized.",
   "start_url": "./index.html",
   "display": "standalone",
