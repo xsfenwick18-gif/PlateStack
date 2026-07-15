@@ -49,20 +49,49 @@
     padding-bottom:60px;
   }
   header{
-    padding:28px 20px 22px;
+    padding:0 0 22px;
     background:var(--bg);
     box-shadow:var(--shadow-sm);
     position:relative;
     z-index:10;
   }
+  .hero-band{
+    position:relative;
+    overflow:hidden;
+    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+    padding:30px 20px 26px;
+    border-radius:0 0 22px 22px;
+    box-shadow:var(--shadow-accent-lg);
+    margin-bottom:20px;
+  }
+  .hero-band::before{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(135deg,
+      rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 2px,
+      transparent 2px, transparent 16px);
+    pointer-events:none;
+  }
+  .hero-band::after{
+    content:"";
+    position:absolute;
+    top:-60px; right:-40px;
+    width:220px; height:220px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+    pointer-events:none;
+  }
+  .hero-band > *{position:relative; z-index:1;}
   .wordmark{
     font-family:'Oswald',sans-serif;
     font-weight:700;
-    font-size:28px;
+    font-size:29px;
     letter-spacing:1px;
     text-transform:uppercase;
+    color:#FFFFFF;
+    text-shadow:0 2px 10px rgba(0,0,0,0.12);
   }
-  .wordmark span{color:var(--accent);}
+  .wordmark span{color:var(--success);}
   .day-label-row{
     margin-top:6px;
     display:flex;
@@ -87,6 +116,9 @@
     color:var(--accent);
   }
   .category-badge.lower{background:rgba(22,163,74,0.1); color:var(--success);}
+  .hero-band .day-label{color:rgba(255,255,255,0.82); text-shadow:0 1px 6px rgba(0,0,0,0.1);}
+  .hero-band .category-badge,
+  .hero-band .category-badge.lower{background:rgba(255,255,255,0.2); color:#FFFFFF;}
   .day-picker{
     margin-top:14px;
     display:flex;
@@ -1335,12 +1367,14 @@
 <body>
 
 <header>
-  <div class="wordmark">GYM<span>FANATIC</span></div>
-  <div class="day-label-row">
-    <div class="day-label" id="dayLabel">Loading...</div>
-    <span class="category-badge" id="categoryBadge" style="display:none"></span>
+  <div class="hero-band">
+    <div class="wordmark">GYM<span>FANATIC</span></div>
+    <div class="day-label-row">
+      <div class="day-label" id="dayLabel">Loading...</div>
+      <span class="category-badge" id="categoryBadge" style="display:none"></span>
+    </div>
   </div>
-  <div class="day-picker">
+  <div class="day-picker" style="padding:0 20px;">
     <label for="daySelect">Today is:</label>
     <select id="daySelect">
       <option value="Upper A">Upper A — Tuesday</option>
@@ -1352,7 +1386,7 @@
     <span class="day-status auto" id="dayStatus">Auto-detected</span>
     <button class="reset-today" id="resetToday">Reset to today</button>
   </div>
-  <div class="nav-tabs">
+  <div class="nav-tabs" style="margin-left:20px; margin-right:20px; width:auto;">
     <button class="nav-tab active" id="tabWorkout">Workout</button>
     <button class="nav-tab" id="tabProgress">Progress</button>
     <button class="nav-tab" id="tabDiet">Diet</button>
