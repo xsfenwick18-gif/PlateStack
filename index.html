@@ -865,6 +865,100 @@
     margin-bottom:20px;
     box-shadow:var(--shadow-sm);
   }
+  .muscle-diagram-card{
+    background:var(--surface);
+    border-radius:12px;
+    padding:14px;
+    margin-bottom:18px;
+    box-shadow:var(--shadow-sm);
+  }
+  .muscle-diagram-title{
+    font-family:'Oswald',sans-serif;
+    font-size:12px;
+    letter-spacing:0.8px;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:10px;
+  }
+  .muscle-diagram-row{
+    display:flex;
+    justify-content:center;
+    gap:24px;
+  }
+  .muscle-diagram-col{text-align:center;}
+  .body-svg{width:88px; height:auto;}
+  .body-svg *{fill:var(--surface-raised); stroke:var(--border); stroke-width:1; transition:fill 0.25s;}
+  .body-svg #mHead, .body-svg #mHead2, .body-svg #mNeck, .body-svg #mNeck2,
+  .body-svg #mHandL, .body-svg #mHandR, .body-svg #mHandL2, .body-svg #mHandR2,
+  .body-svg #mFootL, .body-svg #mFootR, .body-svg #mFootL2, .body-svg #mFootR2{
+    fill:var(--border);
+  }
+  .muscle-diagram-label{
+    font-family:'Oswald',sans-serif;
+    font-size:10px;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-top:4px;
+  }
+  .muscle-legend{
+    display:flex;
+    justify-content:center;
+    gap:16px;
+    margin-top:12px;
+    font-size:11px;
+    color:var(--text-muted);
+  }
+  .muscle-legend span{display:flex; align-items:center; gap:5px;}
+  .muscle-swatch{
+    width:10px; height:10px;
+    border-radius:3px;
+    display:inline-block;
+    background:var(--accent);
+  }
+  .muscle-swatch.secondary{opacity:0.35;}
+  .muscle-diagram-card .detail-muscles{
+    justify-content:center;
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid var(--border);
+  }
+  .detail-howto-card{
+    background:var(--surface);
+    border-radius:12px;
+    padding:14px;
+    margin-bottom:20px;
+    box-shadow:var(--shadow-sm);
+  }
+  .detail-howto-card ol{
+    padding-left:20px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .detail-howto-card li{
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    color:var(--text-muted);
+    line-height:1.4;
+  }
+  .detail-howto-breath{
+    background:rgba(37,99,235,0.07);
+    border-radius:8px;
+    padding:9px 11px;
+    margin-bottom:10px;
+    font-size:12.5px;
+    color:var(--accent-dim);
+    font-weight:600;
+  }
+  .detail-howto-warning{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--border);
+    font-size:12px;
+    font-weight:600;
+    color:#B45309;
+  }
   .detail-history-title{
     font-family:'Oswald',sans-serif;
     font-size:12px;
@@ -1926,6 +2020,68 @@
         <div class="detail-coach-text" id="detailCoachText"></div>
       </div>
 
+      <div class="muscle-diagram-card">
+        <div class="muscle-diagram-title">Muscles Worked</div>
+        <div class="muscle-diagram-row">
+          <div class="muscle-diagram-col">
+            <svg id="bodyFront" viewBox="0 0 160 210" class="body-svg">
+              <ellipse id="mHead" cx="80" cy="18" rx="14" ry="16"/>
+              <rect id="mNeck" x="73" y="32" width="14" height="8"/>
+              <circle id="shoulderL" cx="50" cy="46" r="12"/>
+              <circle id="shoulderR" cx="110" cy="46" r="12"/>
+              <rect id="chest" x="58" y="38" width="44" height="30" rx="10"/>
+              <rect id="bicepL" x="32" y="52" width="15" height="35" rx="7"/>
+              <rect id="bicepR" x="113" y="52" width="15" height="35" rx="7"/>
+              <rect id="abs" x="62" y="68" width="36" height="30" rx="6"/>
+              <rect id="forearmL" x="30" y="87" width="13" height="32" rx="6"/>
+              <rect id="forearmR" x="117" y="87" width="13" height="32" rx="6"/>
+              <circle id="mHandL" cx="36" cy="122" r="7"/>
+              <circle id="mHandR" cx="124" cy="122" r="7"/>
+              <rect id="quadL" x="60" y="98" width="18" height="50" rx="9"/>
+              <rect id="quadR" x="82" y="98" width="18" height="50" rx="9"/>
+              <rect id="calfFrontL" x="61" y="150" width="16" height="40" rx="8"/>
+              <rect id="calfFrontR" x="83" y="150" width="16" height="40" rx="8"/>
+              <ellipse id="mFootL" cx="69" cy="195" rx="10" ry="5"/>
+              <ellipse id="mFootR" cx="91" cy="195" rx="10" ry="5"/>
+            </svg>
+            <div class="muscle-diagram-label">Front</div>
+          </div>
+          <div class="muscle-diagram-col">
+            <svg id="bodyBack" viewBox="0 0 160 210" class="body-svg">
+              <ellipse id="mHead2" cx="80" cy="18" rx="14" ry="16"/>
+              <rect id="mNeck2" x="73" y="32" width="14" height="8"/>
+              <rect id="trapBack" x="62" y="34" width="36" height="16" rx="6"/>
+              <circle id="rearDeltL" cx="50" cy="46" r="12"/>
+              <circle id="rearDeltR" cx="110" cy="46" r="12"/>
+              <rect id="upperBack" x="60" y="50" width="40" height="24" rx="8"/>
+              <rect id="latL" x="46" y="52" width="14" height="38" rx="7"/>
+              <rect id="latR" x="100" y="52" width="14" height="38" rx="7"/>
+              <rect id="tricepL" x="32" y="52" width="15" height="35" rx="7"/>
+              <rect id="tricepR" x="113" y="52" width="15" height="35" rx="7"/>
+              <rect id="lowerBack" x="64" y="74" width="32" height="24" rx="6"/>
+              <rect id="forearmBackL" x="30" y="87" width="13" height="32" rx="6"/>
+              <rect id="forearmBackR" x="117" y="87" width="13" height="32" rx="6"/>
+              <circle id="mHandL2" cx="36" cy="122" r="7"/>
+              <circle id="mHandR2" cx="124" cy="122" r="7"/>
+              <rect id="gluteL" x="60" y="98" width="18" height="22" rx="9"/>
+              <rect id="gluteR" x="82" y="98" width="18" height="22" rx="9"/>
+              <rect id="hamL" x="60" y="120" width="18" height="30" rx="9"/>
+              <rect id="hamR" x="82" y="120" width="18" height="30" rx="9"/>
+              <rect id="calfBackL" x="61" y="150" width="16" height="40" rx="8"/>
+              <rect id="calfBackR" x="83" y="150" width="16" height="40" rx="8"/>
+              <ellipse id="mFootL2" cx="69" cy="195" rx="10" ry="5"/>
+              <ellipse id="mFootR2" cx="91" cy="195" rx="10" ry="5"/>
+            </svg>
+            <div class="muscle-diagram-label">Back</div>
+          </div>
+        </div>
+        <div class="muscle-legend">
+          <span><i class="muscle-swatch primary"></i> Primary</span>
+          <span><i class="muscle-swatch secondary"></i> Secondary</span>
+        </div>
+        <div class="detail-muscles" id="detailMuscles"></div>
+      </div>
+
       <div class="detail-stats-row">
         <div class="detail-stat">
           <div class="detail-stat-label">Personal Record</div>
@@ -1940,6 +2096,9 @@
       <div class="detail-chart-card">
         <canvas id="detailChart" width="600" height="240"></canvas>
       </div>
+
+      <div class="detail-history-title">How To</div>
+      <div class="detail-howto-card" id="detailHowTo"></div>
 
       <div class="detail-history-title">History</div>
       <div id="detailHistoryList"></div>
@@ -2066,6 +2225,52 @@ const MUSCLE_MAP = {
   "DB hammer curl": { primary: ["Biceps", "Forearms"], secondary: [] },
   "Hex bar Romanian deadlift": { primary: ["Hamstrings"], secondary: ["Glutes", "Lower Back"] }
 };
+
+// Maps each muscle label above to the matching SVG shape id(s) in the
+// front/back body diagram, so the right regions light up per exercise.
+const MUSCLE_REGIONS = {
+  "Chest": ["chest"],
+  "Upper Chest": ["chest"],
+  "Shoulders": ["shoulderL","shoulderR"],
+  "Side Delts": ["shoulderL","shoulderR"],
+  "Rear Delts": ["rearDeltL","rearDeltR"],
+  "Triceps": ["tricepL","tricepR"],
+  "Biceps": ["bicepL","bicepR"],
+  "Forearms": ["forearmL","forearmR","forearmBackL","forearmBackR"],
+  "Lats": ["latL","latR"],
+  "Upper Back": ["upperBack"],
+  "Traps": ["trapBack"],
+  "Lower Back": ["lowerBack"],
+  "Glutes": ["gluteL","gluteR"],
+  "Hamstrings": ["hamL","hamR"],
+  "Quads": ["quadL","quadR"],
+  "Calves": ["calfFrontL","calfFrontR","calfBackL","calfBackR"]
+};
+
+function resetBodyDiagram(){
+  document.querySelectorAll('.body-svg > *').forEach(el => {
+    el.style.fill = '';
+    el.style.fillOpacity = '';
+  });
+}
+
+function highlightMuscles(exerciseName){
+  resetBodyDiagram();
+  const m = MUSCLE_MAP[exerciseName];
+  if(!m) return;
+  m.secondary.forEach(label => {
+    (MUSCLE_REGIONS[label] || []).forEach(id => {
+      const el = document.getElementById(id);
+      if(el){ el.style.fill = 'var(--accent)'; el.style.fillOpacity = '0.35'; }
+    });
+  });
+  m.primary.forEach(label => {
+    (MUSCLE_REGIONS[label] || []).forEach(id => {
+      const el = document.getElementById(id);
+      if(el){ el.style.fill = 'var(--accent)'; el.style.fillOpacity = '1'; }
+    });
+  });
+}
 
 // Simple, exercise-specific breathing + bracing cue and safety warning —
 // matches the person's own iPhone Notes template exactly, one line each,
@@ -3219,7 +3424,7 @@ async function openExerciseDetail(exerciseName){
   document.getElementById('detailTitle').textContent = exerciseName;
   overlay.classList.add('active');
 
-  // Muscle pills
+  // Muscle pills + anatomical diagram highlight
   const muscleWrap = document.getElementById('detailMuscles');
   const m = MUSCLE_MAP[exerciseName];
   muscleWrap.innerHTML = '';
@@ -3230,6 +3435,19 @@ async function openExerciseDetail(exerciseName){
     m.secondary.forEach(s => {
       muscleWrap.innerHTML += `<span class="muscle-pill secondary">${s}</span>`;
     });
+  }
+  highlightMuscles(exerciseName);
+
+  // How To — reuses the same form + breathing cues shown on the workout card
+  const howToEl = document.getElementById('detailHowTo');
+  const cuesData = EXERCISE_CUES[exerciseName];
+  if(cuesData){
+    howToEl.innerHTML = `
+      <div class="detail-howto-breath">🫁 ${cuesData.breath}</div>
+      ${cuesData.warning ? `<div class="detail-howto-warning">⚠️ ${cuesData.warning}</div>` : ''}
+    `;
+  } else {
+    howToEl.innerHTML = `<div class="empty-chart">No cues saved for this exercise yet.</div>`;
   }
 
   // Reset panels to loading state
