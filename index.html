@@ -2402,8 +2402,22 @@ function todayDay(){
   // Only Tue–Fri map to a training day; everything else is Rest.
   return DAY_MAP[new Date().getDay()] || "Rest";
 }
+
+// Builds a YYYY-MM-DD string from a Date's LOCAL calendar date, never
+// going through toISOString/UTC. toISOString converts to UTC first, which
+// silently rolls the date back a day for any positive UTC offset (like
+// South Africa, UTC+2) — that was the root cause of "completed" sessions
+// never matching. This is the one safe way to get "today" as the person
+// actually experiences it.
+function toLocalDateString(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function todayDate(){
-  return new Date().toISOString().slice(0,10);
+  return toLocalDateString(new Date());
 }
 
 // Reverse of DAY_MAP — which weekday number each training day falls on.
@@ -2423,7 +2437,7 @@ function dateForDayThisWeek(dayType){
   const diff = weekday - today.getDay();
   const target = new Date(today);
   target.setDate(today.getDate() + diff);
-  return target.toISOString().slice(0,10);
+  return toLocalDateString(target);
 }
 
 // REAL_TODAY_DAY is the ground truth, computed once and never mutated —
@@ -3395,7 +3409,7 @@ async function loadStreakCalendar(){
   for(let i = days - 1; i >= 0; i--){
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const iso = d.toISOString().slice(0,10);
+    const iso = toLocalDateString(d);
     const weekday = d.getDay(); // 0=Sun..6=Sat
     const isScheduled = weekday >= 2 && weekday <= 5; // Tue-Fri
     const isFuture = d > today;
@@ -3434,7 +3448,7 @@ async function loadStreakCalendar(){
     const weekday = d.getDay();
     const isScheduled = weekday >= 2 && weekday <= 5;
     if(!isScheduled) continue;
-    const iso = d.toISOString().slice(0,10);
+    const iso = toLocalDateString(d);
     if(trainedDates.has(iso)) streak++;
     else break;
   }
