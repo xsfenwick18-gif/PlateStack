@@ -1038,6 +1038,93 @@
   }
   .exercise-name-btn:hover{text-decoration-color:var(--accent);}
 
+  /* Warm-up checklist */
+  .warmup-sheet{max-height:92vh;}
+  .warmup-header{
+    text-align:center;
+    padding:28px 24px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .warmup-icon{font-size:34px; margin-bottom:8px;}
+  .warmup-sheet .detail-title{font-size:20px; margin-bottom:6px;}
+  .warmup-sub{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    color:var(--text-muted);
+    line-height:1.4;
+    max-width:340px;
+    margin:0 auto;
+  }
+  .warmup-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .warmup-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--surface);
+    border-radius:12px;
+    padding:14px;
+    cursor:pointer;
+    box-shadow:var(--shadow-sm);
+    transition:background 0.15s;
+  }
+  .warmup-check{position:absolute; opacity:0; width:0; height:0;}
+  .warmup-check-box{
+    width:24px; height:24px;
+    flex-shrink:0;
+    border-radius:7px;
+    border:2px solid var(--border);
+    background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.15s;
+  }
+  .warmup-check-box::after{
+    content:"";
+    width:12px; height:7px;
+    border-left:2.5px solid white;
+    border-bottom:2.5px solid white;
+    transform:rotate(-45deg) translateY(-1px);
+    opacity:0;
+    transition:opacity 0.1s;
+  }
+  .warmup-check:checked ~ .warmup-check-box{
+    background:var(--success);
+    border-color:var(--success);
+  }
+  .warmup-check:checked ~ .warmup-check-box::after{opacity:1;}
+  .warmup-item:has(.warmup-check:checked){background:rgba(22,163,74,0.08);}
+  .warmup-text{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    color:var(--text);
+    line-height:1.4;
+  }
+  .warmup-start-btn{
+    width:100%;
+    background:var(--border);
+    color:var(--text-muted);
+    border:none;
+    border-radius:12px;
+    padding:15px;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    font-size:14px;
+    cursor:not-allowed;
+    transition:all 0.2s;
+  }
+  .warmup-start-btn.ready{
+    background:var(--btn-gradient);
+    color:#FFFFFF;
+    box-shadow:var(--shadow-accent);
+    cursor:pointer;
+  }
+
   /* Coach chat */
   .coach-fab{
     position:fixed;
@@ -2041,6 +2128,26 @@
   </div>
 </div>
 
+<div class="detail-overlay" id="warmupOverlay">
+  <div class="detail-sheet warmup-sheet">
+    <div class="warmup-header">
+      <div class="warmup-icon">🔥</div>
+      <div class="detail-title">Wake Your Body Up First</div>
+      <div class="warmup-sub">5AM straight out of bed — your body needs this before touching any weight. Tick each one off as you go.</div>
+    </div>
+    <div class="detail-body">
+      <div class="warmup-list" id="warmupList">
+        <label class="warmup-item"><input type="checkbox" class="warmup-check"><span class="warmup-check-box"></span><span class="warmup-text">20× arm circles — forward and backward</span></label>
+        <label class="warmup-item"><input type="checkbox" class="warmup-check"><span class="warmup-check-box"></span><span class="warmup-text">20× hip rotations — both sides</span></label>
+        <label class="warmup-item"><input type="checkbox" class="warmup-check"><span class="warmup-check-box"></span><span class="warmup-text">10× bodyweight squats — loosen knees and hips</span></label>
+        <label class="warmup-item"><input type="checkbox" class="warmup-check"><span class="warmup-check-box"></span><span class="warmup-text">10× band pull-aparts or wide arm pulls — wake up the shoulders</span></label>
+        <label class="warmup-item"><input type="checkbox" class="warmup-check"><span class="warmup-check-box"></span><span class="warmup-text">Ready for warm-up sets on your first exercise</span></label>
+      </div>
+      <button class="warmup-start-btn" id="warmupStartBtn" disabled>Tick all 5 to start session</button>
+    </div>
+  </div>
+</div>
+
 <div class="detail-overlay" id="exerciseDetailOverlay">
   <div class="detail-sheet">
     <div class="detail-header">
@@ -3012,6 +3119,39 @@ document.addEventListener('input', (e) => {
 
 loadWorkout();
 
+// ==== Warm-up gate ====
+// Shown once per page load, only on the real auto-detected training day
+// (not on manual previews of other days, and not on Rest days — there's
+// nothing to warm up for on a rest day). This is a session-scoped flag,
+// not persisted, so it correctly reappears fresh the next time the app
+// is opened for a new session.
+let warmupDoneToday = false;
+
+function maybeShowWarmupGate(){
+  if(warmupDoneToday) return;
+  if(REAL_TODAY_DAY === "Rest") return;
+  if(currentDay !== REAL_TODAY_DAY) return; // only gate the real session, not a preview
+  document.getElementById('warmupOverlay').classList.add('active');
+}
+
+const warmupChecks = document.querySelectorAll('.warmup-check');
+const warmupStartBtn = document.getElementById('warmupStartBtn');
+warmupChecks.forEach(chk => {
+  chk.addEventListener('change', () => {
+    const allChecked = Array.from(warmupChecks).every(c => c.checked);
+    warmupStartBtn.disabled = !allChecked;
+    warmupStartBtn.classList.toggle('ready', allChecked);
+    warmupStartBtn.textContent = allChecked ? "Start Session" : `Tick all 5 to start session`;
+  });
+});
+warmupStartBtn.addEventListener('click', () => {
+  if(warmupStartBtn.disabled) return;
+  warmupDoneToday = true;
+  document.getElementById('warmupOverlay').classList.remove('active');
+});
+
+maybeShowWarmupGate();
+
 // ==== Tab switching ====
 const ALL_EXERCISES = [
   "Smith flat bench press", "Lat pulldown", "Seated DB shoulder press", "DB row",
@@ -3830,6 +3970,10 @@ function buildSetFeedback(ex, setNum, weight, reps, isPR, lastSet){
 // Checked in order top to bottom, so more specific patterns sit above more
 // general ones that might otherwise catch them first.
 const COACH_FAQ_RULES = [
+  // --- exercise order (non-negotiable — check before general programming questions) ---
+  { test: /isolation.*(first|before)|curls? first|do.*isolation.*before|change.*order|switch.*order|reorder/, reply:
+    "Compounds always come first, isolations last — that's not changing. Compounds need your full energy and focus, and that's when injuries happen if they're done fatigued. If mornings feel rough before you're properly awake, that's what the 5-minute warm-up at the start of each session is for — it solves the real problem without touching the order." },
+
   // --- injury / pain (specific before general) ---
   { test: /wrist|grip.*(hurt|pain|sore)/, reply:
     "Wrist or grip pain is usually a bar-path or wrist-angle issue — try keeping the bar more in your palm than your fingers, and wrists stacked straight over your elbows on presses. If it persists, that's worth getting checked rather than pushing through." },
